@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Outfits</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #f4f4f5;
+      color: #18181b;
+      min-height: 100vh;
+      padding: 2rem 1.5rem;
+    }
+
+    header {
+      margin: 0 auto 2rem;
+    }
+
+    header h1 {
+      font-size: 4rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .header-row {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    header p {
+      margin-top: 0.35rem;
+      color: #71717a;
+      font-size: 0.95rem;
+      text-transform: capitalize;
+    }
+
+    .reset-btn {
+      padding: 0.55rem 1rem;
+      border: 1px solid #e4e4e7;
+      border-radius: 8px;
+      background: #fff;
+      color: #52525b;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .reset-btn:hover {
+      background: #fef2f2;
+      border-color: #fecaca;
+      color: #dc2626;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1.25rem;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: #fff;
+      border: 2px solid transparent;
+      border-radius: 14px;
+      overflow: hidden;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+      user-select: none;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    }
+
+    .card:active {
+      transform: translateY(-1px);
+    }
+
+    .card.clicked {
+      border-color: orange;
+      border-width: 4px;
+    }
+
+    .card-image {
+      aspect-ratio: 3 / 5;
+      overflow: hidden;
+      background: #e4e4e7;
+    }
+
+    .card-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      pointer-events: none;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+      border-top: 1px solid #f4f4f5;
+    }
+
+    .card-label {
+      font-size: 0.8rem;
+      color: black;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 60%;
+    }
+
+    .card-count {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-weight: 700;
+      font-size: 1rem;
+      color: black;
+    }
+
+    .card-count span {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 1.75rem;
+      height: 1.75rem;
+      padding: 0 0.4rem;
+      background: #FED5A2;
+      border-radius: 999px;
+      font-size: 0.875rem;
+    }
+
+    .empty, .error {
+      max-width: 1200px;
+      margin: 0 auto;
+      text-align: center;
+      color: #71717a;
+      padding: 3rem 1rem;
+    }
+
+    .error { color: #ef4444; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-row">
+      <div>
+        <h1>Outfits</h1>
+        <p id="period-label">Cargando…</p>
+      </div>
+      <button type="button" id="reset-btn" class="reset-btn">Reiniciar contadores</button>
+    </div>
+  </header>
+
+  <div id="grid" class="grid"></div>
+
+  <script>
+    const STORAGE_KEY = 'outfit-clicks';
+
+    function getCurrentPeriod() {
+      const now = new Date();
+      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    }
+
+    function formatPeriod(period) {
+      const [year, month] = period.split('-');
+      const date = new Date(Number(year), Number(month) - 1, 1);
+      return date.toLocaleDateString('es', { month: 'long', year: 'numeric' });
+    }
+
+    function loadState() {
+      const period = getCurrentPeriod();
+      try {
+        const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+        if (stored.period === period && stored.counts) {
+          return { period, counts: stored.counts };
+        }
+      } catch (_) {}
+      return { period, counts: {} };
+    }
+
+    function saveState(state) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function imageId(src) {
+      return src.split('/').pop();
+    }
+
+    function formatAssetLabel(index) {
+      return `Outfit ${String(index + 1).padStart(2, '0')}`;
+    }
+
+    function renderCard(src, label, count, onClick) {
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'card' + (count > 0 ? ' clicked' : '');
+      card.setAttribute('aria-label', `${label}, ${count} clics`);
+
+      card.innerHTML = `
+        <div class="card-image">
+          <img src="${encodeURI(src)}" alt="${label}" loading="lazy">
+        </div>
+        <div class="card-footer">
+          <span class="card-label">${label}</span>
+          <div class="card-count">
+            <span data-count>${count}</span>
+          </div>
+        </div>
+      `;
+
+      card.addEventListener('click', onClick);
+      return card;
+    }
+
+    function updateCard(card, count) {
+      card.querySelector('[data-count]').textContent = count;
+      card.classList.toggle('clicked', count > 0);
+      card.setAttribute('aria-label', card.getAttribute('aria-label').replace(/\d+ clics$/, `${count} clics`));
+    }
+
+    function lookPath(n) {
+      return `assets/images/look${String(n).padStart(2, '0')}.png`;
+    }
+
+    function imageExists(src) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve(true);
+        img.onerror = () => resolve(false);
+        img.src = src;
+      });
+    }
+
+    async function loadImages() {
+      const checks = Array.from({ length: 50 }, (_, i) => {
+        const src = lookPath(i + 1);
+        return imageExists(src).then((exists) => (exists ? src : null));
+      });
+      return (await Promise.all(checks)).filter(Boolean);
+    }
+
+    async function init() {
+      const grid = document.getElementById('grid');
+      const periodLabel = document.getElementById('period-label');
+      const resetBtn = document.getElementById('reset-btn');
+      const state = loadState();
+      const cards = new Map();
+
+      periodLabel.textContent = `Contador del mes: ${formatPeriod(state.period)} · se reinicia el día 1`;
+
+      resetBtn.addEventListener('click', () => {
+        if (!confirm('¿Reiniciar todos los contadores a cero?')) return;
+
+        state.counts = {};
+        saveState(state);
+        cards.forEach((card) => updateCard(card, 0));
+      });
+
+      let images;
+      try {
+        images = await loadImages();
+      } catch (_) {
+        grid.innerHTML = '<p class="error">No se pudieron cargar las imágenes.</p>';
+        return;
+      }
+
+      if (!images.length) {
+        grid.innerHTML = '<p class="empty">No hay imágenes en assets/images.</p>';
+        return;
+      }
+
+      images.forEach((src, index) => {
+        const id = imageId(src);
+        const label = formatAssetLabel(index);
+        const count = state.counts[id] || 0;
+
+        const card = renderCard(src, label, count, () => {
+          state.counts[id] = (state.counts[id] || 0) + 1;
+          saveState(state);
+          updateCard(card, state.counts[id]);
+        });
+
+        cards.set(id, card);
+        grid.appendChild(card);
+      });
+    }
+
+    init();
+  </script>
+</body>
+</html>
