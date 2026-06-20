@@ -123,6 +123,7 @@
       justify-content: space-between;
       padding: 0.75rem 1rem;
       border-top: 1px solid #f4f4f5;
+      background-color: #fff;
     }
 
     .card-label {
@@ -197,7 +198,7 @@
       const period = getCurrentPeriod();
       try {
         const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-        if (stored.period === period && stored.counts) {
+        if (stored.counts) {
           return { period, counts: stored.counts };
         }
       } catch (_) {}
@@ -239,6 +240,7 @@
     }
 
     function updateCard(card, count) {
+      card.querySelector('.card-footer').style.backgroundColor = '#FD940A';
       card.querySelector('[data-count]').textContent = count;
       card.classList.toggle('clicked', count > 0);
       card.setAttribute('aria-label', card.getAttribute('aria-label').replace(/\d+ clics$/, `${count} clics`));
