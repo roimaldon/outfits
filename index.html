@@ -5,10 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Outfits</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap');
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: system-ui, -apple-system, sans-serif;
+      font-family: Quicksand, system-ui, -apple-system, sans-serif;
       background: #f4f4f5;
       color: #18181b;
       min-height: 100vh;
@@ -16,6 +17,8 @@
       flex-direction: column;
       justify-content: space-between;
       align-items: start;
+      width: 100%;
+      max-width: 390px;
     }
 
     header {
@@ -27,7 +30,7 @@
     }
 
     header h1 {
-      font-size: 125px;
+      font-size: 120px;
       font-weight: 700;
       letter-spacing: -3px;
       line-height: 80px;
@@ -46,29 +49,26 @@
 
     header p {
       color: #71717a;
-      font-size: 20px;
+      font-size: 25px;
       text-transform: capitalize;
-      font-weight: 900;
+      font-weight: 700;
       letter-spacing: 2px;
     }
 
     .reset-btn {
       padding: 10px 20px;
-      border: 1px solid #e4e4e7;
+      border: 1px solid #717171;
       border-radius: 8px;
       background: #fff;
-      color: #52525b;
-      font-size: 0.875rem;
-      font-weight: 500;
+      color: #717171;
+      font-size: 15px;
+      font-weight: 700;
       cursor: pointer;
-      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-      white-space: nowrap;
     }
 
     .reset-btn:hover {
-      background: #fef2f2;
-      border-color: #fecaca;
-      color: #dc2626;
+      background: #717171;
+      color: white;
     }
 
     .grid {
@@ -99,8 +99,8 @@
     }
 
     .card.clicked {
-      border-color: orange;
-      border-width: 3px;
+      border-color: #afafaf;
+      border-width: 2px;
     }
 
     .card-image {
@@ -127,33 +127,24 @@
     }
 
     .card-label {
-      font-size: 0.8rem;
-      color: black;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 60%;
+      font-size: 16px;
+      color: #717171;
+      font-weight: 700;
     }
 
     .card-count {
       display: flex;
       align-items: center;
-      gap: 0.35rem;
-      font-weight: 700;
-      font-size: 1rem;
-      color: black;
+      gap: 10px;
     }
 
     .card-count span {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 1.75rem;
-      height: 1.75rem;
-      padding: 0 0.4rem;
-      background: #FED5A2;
-      border-radius: 999px;
-      font-size: 0.875rem;
+      font-weight: 700;
+      font-size: 17px;
+      color: #717171;
+      background-color: #dff2ff;
+      padding: 5px 20px;
+      border-radius: 19px;
     }
 
     .empty, .error {
@@ -223,6 +214,21 @@
       card.className = 'card' + (count > 0 ? ' clicked' : '');
       card.setAttribute('aria-label', `${label}, ${count} clics`);
 
+      let bgColor = '';
+      let tColor = '#717171';
+
+      if (count === 0) {
+        bgColor = '#DDDDDD';
+      } else if (count === 1) {
+        bgColor = '#C4C4C4';
+      } else if (count === 2) {
+        bgColor = '#848484';
+        tColor = '#fff';
+      } else {
+        bgColor = '#5A5A5A';
+        tColor = '#fff';
+      }
+
       card.innerHTML = `
         <div class="card-image">
           <img src="${encodeURI(src)}" alt="${label}" loading="lazy">
@@ -230,7 +236,7 @@
         <div class="card-footer">
           <span class="card-label">${label}</span>
           <div class="card-count">
-            <span data-count>${count}</span>
+            <span data-count style="background-color:${bgColor};color:${tColor}">${count}</span>
           </div>
         </div>
       `;
@@ -240,7 +246,6 @@
     }
 
     function updateCard(card, count) {
-      card.querySelector('.card-footer').style.backgroundColor = '#FD940A';
       card.querySelector('[data-count]').textContent = count;
       card.classList.toggle('clicked', count > 0);
       card.setAttribute('aria-label', card.getAttribute('aria-label').replace(/\d+ clics$/, `${count} clics`));
